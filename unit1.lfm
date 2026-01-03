@@ -1,0 +1,60 @@
+object Form1: TForm1
+  Left = 437
+  Height = 498
+  Top = 232
+  Width = 681
+  Caption = 'Form1'
+  ClientHeight = 498
+  ClientWidth = 681
+  DesignTimePPI = 120
+  LCLVersion = '4.99.0.0'
+  OnShow = FormShow
+  object LazVirtualStringTree1: TLazVirtualStringTree
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Splitter1
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 10
+    Height = 478
+    Top = 10
+    Width = 220
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Around = 10
+    DefaultText = 'Node'
+    Header.AutoSizeIndex = 0
+    Header.Columns = <>
+    Header.MainColumn = -1
+    TabOrder = 0
+  end
+  object Splitter1: TSplitter
+    AnchorSideTop.Control = LazVirtualStringTree1
+    AnchorSideBottom.Control = LazVirtualStringTree1
+    AnchorSideBottom.Side = asrBottom
+    Left = 240
+    Height = 478
+    Top = 10
+    Width = 6
+    Align = alNone
+    Anchors = [akTop, akBottom]
+    AutoSnap = False
+    ResizeAnchor = akRight
+  end
+  object Panel1: TPanel
+    AnchorSideLeft.Control = Splitter1
+    AnchorSideLeft.Side = asrBottom
+    AnchorSideTop.Control = Owner
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 256
+    Height = 478
+    Top = 10
+    Width = 415
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Around = 10
+    Caption = 'Panel1'
+    TabOrder = 2
+  end
+end
