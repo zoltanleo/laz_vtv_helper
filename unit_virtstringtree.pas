@@ -18,6 +18,11 @@ type
     tsName: String;       // имя вкладки PageControl
   end;
 
+  TNodeRec = record
+    Node: PVirtualNode;
+    Data: TMyRecord;
+  end;
+
   // Вспомогательный класс для доступа к защищенным полям
   TBaseVirtualTreeAccess = class(TBaseVirtualTree)
   end;
@@ -36,6 +41,7 @@ type
       const AActionName, ACaption, AtsName: String): PVirtualNode;
     class procedure PrepareForSave(VTree: TBaseVirtualTree); // вызвать перед SaveToStream
     class procedure InitializeTree(VTree: TBaseVirtualTree); // устанавливает NodeDataSize
+    class procedure LoadTreeFromStreamWithStructure(VTree: TBaseVirtualTree; Stream: TStream);
   end;
 
 implementation
@@ -214,6 +220,87 @@ class procedure TVirtStringTreeHelper.InitializeTree(VTree: TBaseVirtualTree);
 begin
   // Используем вспомогательный класс для доступа к защищенному свойству
   TBaseVirtualTreeAccess(VTree).NodeDataSize := SizeOf(TMyRecord);
+end;
+
+class procedure TVirtStringTreeHelper.LoadTreeFromStreamWithStructure(
+  VTree: TBaseVirtualTree; Stream: TStream);
+var
+  NodeCount: SizeInt;
+  i, j: SizeInt;
+  Node: PVirtualNode;
+  Data: PMyRecord;
+  AllNodes: array of TNodeRec;
+  ParentNode: PVirtualNode;
+  TempRec: TNodeRec;
+begin
+  VTree.Clear;
+  VTree.Tag := 1;
+
+  // Читаем количество узлов
+  Stream.Read(NodeCount, SizeOf(NodeCount));
+  SetLength(AllNodes, NodeCount);
+
+  // Создаём узлы и сохраняем их данные в массив
+  for i := 0 to Pred(NodeCount) do
+  begin
+    AllNodes[i].Node := VTree.AddChild(nil);
+    Data := VTree.GetNodeData(AllNodes[i].Node);
+    ReadNodeData(VTree, AllNodes[i].Node, Stream);
+
+    Move(Data^, AllNodes[i].Data, SizeOf(TMyRecord));
+  end;
+
+  // Сортировка: корни в начало
+  for i := 0 to High(AllNodes) do
+  begin
+    for j := i + 1 to High(AllNodes) do
+    begin
+      if (AllNodes[i].Data.ParentID <> -1) and (AllNodes[j].Data.ParentID = -1) then
+      begin
+        // Меняем местами
+        TempRec := AllNodes[i];    // <-- OK: теперь TNodeRec - это именованный тип
+        AllNodes[i] := AllNodes[j];
+        AllNodes[j] := TempRec;
+      end
+      else if (AllNodes[i].Data.ParentID <> -1) and (AllNodes[j].Data.ParentID <> -1) then
+      begin
+        if AllNodes[i].Data.ParentID > AllNodes[j].Data.ParentID then
+        begin
+          TempRec := AllNodes[i];
+          AllNodes[i] := AllNodes[j];
+          AllNodes[j] := TempRec;
+        end;
+      end;
+    end;
+  end;
+
+  // Восстанавливаем иерархию
+  for i := 0 to High(AllNodes) do
+  begin
+    ParentNode := nil;
+    if AllNodes[i].Data.ParentID <> -1 then
+    begin
+      // Ищем родителя по ID
+      for j := 0 to High(AllNodes) do
+      begin
+        if AllNodes[j].Data.ID = AllNodes[i].Data.ParentID then
+        begin
+          ParentNode := AllNodes[j].Node;
+          Break;
+        end;
+      end;
+    end;
+
+    // Если текущий родитель не тот — перемещаем
+    if VTree.NodeParent[AllNodes[i].Node] <> ParentNode then
+    begin
+      VTree.MoveTo(AllNodes[i].Node, ParentNode, amAddChildLast, False);
+    end;
+
+    // Обновляем данные узла (на случай, если они сбросились при MoveTo)
+    Data := VTree.GetNodeData(AllNodes[i].Node);
+    Move(AllNodes[i].Data, Data^, SizeOf(TMyRecord));
+  end;
 end;
 
 end.

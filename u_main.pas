@@ -92,13 +92,15 @@ procedure TfrmMain.LoadTreeFromChild;
 begin
   FchildFrm.tmpMS.Position := 0;
   vstMain.Clear;
-  TVirtStringTreeHelper.LoadTreeFromStream(vstMain, FchildFrm.tmpMS);
+  //TVirtStringTreeHelper.LoadTreeFromStream(vstMain, FchildFrm.tmpMS);
+  TVirtStringTreeHelper.LoadTreeFromStreamWithStructure(vstMain, FchildFrm.tmpMS);
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   // Настройка дерева
-  vstMain.NodeDataSize := SizeOf(TMyRecord);
+  //vstMain.NodeDataSize := SizeOf(TMyRecord);
+  TVirtStringTreeHelper.InitializeTree(vstMain);
   vstMain.OnNodeClick := @vstMainNodeClick;
 end;
 
