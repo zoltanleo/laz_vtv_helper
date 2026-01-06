@@ -1,4 +1,4 @@
-unit Unit1;
+unit u_main;
 
 {$mode objfpc}{$H+}
 

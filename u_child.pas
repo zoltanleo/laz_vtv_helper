@@ -1,4 +1,4 @@
-unit Unit2;
+unit u_child;
 
 {$mode ObjFPC}{$H+}
 
@@ -20,9 +20,9 @@ uses
 
 type
 
-  { TForm2 }
+  { TfrmChild }
 
-  TForm2 = class(TForm)
+  TfrmChild = class(TForm)
     Button1: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
@@ -63,15 +63,15 @@ type
   end;
 
 var
-  Form2: TForm2;
+  frmChild: TfrmChild;
 
 implementation
 
 {$R *.lfm}
 
-{ TForm2 }
+{ TfrmChild }
 
-procedure TForm2.FormCreate(Sender: TObject);
+procedure TfrmChild.FormCreate(Sender: TObject);
 begin
   FchildVST:= TLazVirtualStringTree.Create(Self);
   TVirtStringTreeHelper.InitializeTree(FChildVST); // устанавливаем NodeDataSize
@@ -84,24 +84,24 @@ begin
   CreateTree;
 end;
 
-procedure TForm2.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+procedure TfrmChild.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   CloseAction:= caFree;
 end;
 
-procedure TForm2.FormDestroy(Sender: TObject);
+procedure TfrmChild.FormDestroy(Sender: TObject);
 begin
   FtmpMS.Free;
   FActList.Free;
   FchildVST.Free;
 end;
 
-procedure TForm2.FormShow(Sender: TObject);
+procedure TfrmChild.FormShow(Sender: TObject);
 begin
   //FtmpVST.SaveToStream(FtmpMS);
 end;
 
-procedure TForm2.FillActionList;
+procedure TfrmChild.FillActionList;
 begin
   with TAction.Create(FActList) do
   begin
@@ -153,7 +153,7 @@ begin
   end;
 end;
 
-procedure TForm2.CreateTree;
+procedure TfrmChild.CreateTree;
 var
   RootNode: PVirtualNode = nil;
   ChildNode: PVirtualNode = nil;
@@ -170,7 +170,7 @@ begin
   RootNode := TVirtStringTreeHelper.AddNode(FChildVST, nil, 'ActThreeRoot', 'Node Three', 'tsThree');
 end;
 
-procedure TForm2.SaveTreeToStream;
+procedure TfrmChild.SaveTreeToStream;
 begin
   FtmpMS.Clear;
   TVirtStringTreeHelper.SaveTreeToStream(FChildVST, FtmpMS);

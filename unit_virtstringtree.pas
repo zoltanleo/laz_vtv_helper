@@ -15,8 +15,12 @@ type
     ParentID: Integer;    // содержит для child-узла ID root-узла (для root-узла равен -1)
     ActionName: String;   // ссылка-имя на Action в произвольном ActList
     Caption: String;      // заголовок узла
+    tsName: String;       // имя вкладки PageControl
   end;
 
+  // Вспомогательный класс для доступа к защищенным полям
+  TBaseVirtualTreeAccess = class(TBaseVirtualTree)
+  end;
 
   { TVirtStringTreeHelper }
 
@@ -28,8 +32,10 @@ type
   public
     class procedure SaveTreeToStream(VTree: TBaseVirtualTree; Stream: TStream);
     class procedure LoadTreeFromStream(VTree: TBaseVirtualTree; Stream: TStream);
-    class function AddNode(VTree: TBaseVirtualTree; ParentNode: PVirtualNode; const AActionName, ACaption: String): PVirtualNode;
+    class function AddNode(VTree: TBaseVirtualTree; ParentNode: PVirtualNode;
+      const AActionName, ACaption, AtsName: String): PVirtualNode;
     class procedure PrepareForSave(VTree: TBaseVirtualTree); // вызвать перед SaveToStream
+    class procedure InitializeTree(VTree: TBaseVirtualTree); // устанавливает NodeDataSize
   end;
 
 implementation
@@ -44,12 +50,15 @@ var
   Len: SizeInt = 0;
   EncodedActionName: UTF8String = '';
   EncodedCaption: UTF8String = '';
+  EncodedtsName: UTF8String = '';
+
 begin
   Data:= VTree.GetNodeData(Node);
 
   // Записываем данные в UTF-8 для обеспечения совместимости
   EncodedActionName := UTF8String(Data^.ActionName);
   EncodedCaption := UTF8String(Data^.Caption);
+  EncodedtsName := UTF8String(Data^.tsName);
 
   Stream.Write(Data^.ID, SizeOf(Data^.ID));
   Stream.Write(Data^.ParentID, SizeOf(Data^.ParentID));
@@ -64,6 +73,11 @@ begin
   Stream.Write(Len, SizeOf(Len));
 
   if (Len > 0) then Stream.Write(EncodedCaption[1], Len);
+
+  Len := Length(EncodedtsName);
+  Stream.Write(Len, SizeOf(Len));
+
+  if (Len > 0) then Stream.Write(EncodedtsName[1], Len);
 end;
 
 class procedure TVirtStringTreeHelper.ReadNodeData(VTree: TBaseVirtualTree;
@@ -92,6 +106,13 @@ begin
 
   if (Len > 0) then Stream.Read(TempUTF8[1], Len);
   Data^.Caption := String(TempUTF8);
+
+  // Читаем tsName
+  Stream.Read(Len, SizeOf(Len));
+  SetLength(TempUTF8, Len);
+
+  if (Len > 0) then Stream.Read(TempUTF8[1], Len);
+  Data^.tsName := String(TempUTF8);
 
   // Обновляем NextID для корректной генерации новых ID
   NextID := VTree.Tag; // используем Tag для хранения NextID
@@ -159,7 +180,8 @@ begin
 end;
 
 class function TVirtStringTreeHelper.AddNode(VTree: TBaseVirtualTree;
-  ParentNode: PVirtualNode; const AActionName, ACaption: String): PVirtualNode;
+  ParentNode: PVirtualNode; const AActionName, ACaption, AtsName: String
+  ): PVirtualNode;
 var
   Data: PMyRecord = nil;
   ParentID: SizeInt = 0;
@@ -180,11 +202,18 @@ begin
   Data^.ParentID := ParentID;
   Data^.ActionName := AActionName;
   Data^.Caption := ACaption;
+  Data^.tsName := AtsName;
 end;
 
 class procedure TVirtStringTreeHelper.PrepareForSave(VTree: TBaseVirtualTree);
 begin
   VTree.Tag := 1; // сбросить ID перед сохранением
+end;
+
+class procedure TVirtStringTreeHelper.InitializeTree(VTree: TBaseVirtualTree);
+begin
+  // Используем вспомогательный класс для доступа к защищенному свойству
+  TBaseVirtualTreeAccess(VTree).NodeDataSize := SizeOf(TMyRecord);
 end;
 
 end.

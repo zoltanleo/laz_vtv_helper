@@ -1,9 +1,9 @@
-object Form2: TForm2
+object frmChild: TfrmChild
   Left = 551
   Height = 388
   Top = 267
   Width = 618
-  Caption = 'Form2'
+  Caption = 'frmChild'
   ClientHeight = 388
   ClientWidth = 618
   DesignTimePPI = 120
