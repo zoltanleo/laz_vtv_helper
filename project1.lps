@@ -20,8 +20,9 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="70"/>
-        <CursorPos Y="94"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="108"/>
+        <CursorPos X="15" Y="119"/>
         <UsageCount Value="53"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -42,10 +43,8 @@
       <Unit>
         <Filename Value="unit_virtstringtree.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="219"/>
-        <CursorPos X="30" Y="233"/>
+        <CursorPos X="30" Y="29"/>
         <FoldState Value=" T3i36Z2 Pi8iZ67"/>
         <UsageCount Value="35"/>
         <Loaded Value="True"/>
@@ -85,22 +84,6 @@
       <Backend Value="{C6157405-0718-4C9C-A377-E08FA9D2F9DB}"/>
     </Debugger>
     <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="u_main.pas"/>
-        <Caret Line="55" Column="15" TopLine="46"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="213" TopLine="185"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="102" Column="2" TopLine="87"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="88" Column="15" TopLine="83"/>
-      </Position>
       <Position>
         <Filename Value="unit_virtstringtree.pas"/>
         <Caret Line="188" Column="7" TopLine="161"/>
@@ -204,6 +187,22 @@
       <Position>
         <Filename Value="unit_virtstringtree.pas"/>
         <Caret Line="224" Column="23" TopLine="210"/>
+      </Position>
+      <Position>
+        <Filename Value="u_main.pas"/>
+        <Caret Line="102" TopLine="78"/>
+      </Position>
+      <Position>
+        <Filename Value="u_main.pas"/>
+        <Caret Line="49" Column="34" TopLine="34"/>
+      </Position>
+      <Position>
+        <Filename Value="u_main.pas"/>
+        <Caret Line="35" Column="21" TopLine="20"/>
+      </Position>
+      <Position>
+        <Filename Value="u_main.pas"/>
+        <Caret Line="103" TopLine="88"/>
       </Position>
     </JumpHistory>
     <RunParams>

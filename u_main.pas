@@ -27,10 +27,13 @@ type
     Splitter1: TSplitter;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
+
   private
     FchildFrm: TfrmChild;
   public
     procedure vstMainNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+    procedure vstMainGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+              Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
     procedure LoadTreeFromChild;
   end;
 
@@ -87,6 +90,20 @@ begin
   end;
 end;
 
+procedure TfrmMain.vstMainGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
+var
+  Data: PMyRecord = nil;
+begin
+  Data := vstMain.GetNodeData(Node);
+  if not Assigned(Data) then Exit;
+
+  case Column of
+    0: CellText := Data^.Caption;
+    else;
+  end;
+end;
+
 procedure TfrmMain.LoadTreeFromChild;
 begin
   FchildFrm.tmpMS.Position := 0;
@@ -98,7 +115,52 @@ procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   // Настройка дерева
   TVirtStringTreeHelper.InitializeTree(vstMain);
-  vstMain.OnNodeClick := @vstMainNodeClick;
+
+  with vstMain do
+  begin
+    HintMode := hmTooltip;
+    ShowHint := True;
+    CheckImageKind:= ckSystemDefault;
+
+    with Header do
+    begin
+      Columns.Clear;
+
+      Columns.Add;
+      //Columns[0].Text := CaptTreeStudyParam;
+      //Columns[0].MinWidth:= cbbStaffSpec.Height * 7;
+      Columns[0].Options:= Columns[0].Options + [coSmartResize] - [coEditable, coDraggable];
+      //Columns[0].CaptionAlignment:= taCenter;
+      //Columns[0].Style:= vsOwnerDraw;
+
+      Height := Canvas.TextHeight('W') * 3 div 2;
+      Options := Options + [hoAutoResize, hoOwnerDraw, hoShowHint, hoShowImages, hoVisible];
+    end;
+
+    with TreeOptions do
+    begin
+      AutoOptions := AutoOptions +
+        [toAutoScroll, toAutoSpanColumns] - [];
+
+      MiscOptions := MiscOptions +
+        [toCheckSupport] - [toAcceptOLEDrop, toEditOnClick];
+      PaintOptions := PaintOptions
+        //+ [toShowVertGridLines, toShowHorzGridLines]
+        - [toShowDropmark
+          //, toShowTreeLines
+            ];
+
+      SelectionOptions := SelectionOptions +
+        [toExtendedFocus, toFullRowSelect, toCenterScrollIntoView,
+        toAlwaysSelectNode] - [];
+    end;
+
+    OnNodeClick := @vstMainNodeClick;
+    OnGetText:= @vstMainGetText;
+
+  end;
+
+
 end;
 
 end.
