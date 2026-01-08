@@ -173,7 +173,6 @@ end;
 procedure TfrmChild.SaveTreeToStream;
 begin
   FtmpMS.Clear;
-  //TVirtStringTreeHelper.PrepareForSave(FchildVST);
   TVirtStringTreeHelper.SaveTreeToStream(FChildVST, FtmpMS);
 end;
 
