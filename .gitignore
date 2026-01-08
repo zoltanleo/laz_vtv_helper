@@ -3,5 +3,8 @@
 #
 
 *.exe
+*.lfm_
+*.pas_
+
 /lib
 /published

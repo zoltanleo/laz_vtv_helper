@@ -8,14 +8,13 @@ uses
   Classes, SysUtils, laz.VirtualTrees, LCLIntf, LCLType;
 
 type
-
   PMyRecord = ^TMyRecord;
   TMyRecord = record
-    ID: Integer;          // ID узла дерева
-    ParentID: Integer;    // содержит для child-узла ID root-узла (для root-узла равен -1)
-    ActionName: String;   // ссылка-имя на Action в произвольном ActList
-    Caption: String;      // заголовок узла
-    tsName: String;       // имя вкладки PageControl
+    ID: Integer; // ID узла дерева
+    ParentID: Integer; // содержит для child-узла ID root-узла (для root-узла равен -1)
+    ActionName: String; // ссылка-имя на Action в произвольном ActList
+    Caption: String; // заголовок узла
+    tsName: String; // имя вкладки PageControl
   end;
 
   // Вспомогательный класс для доступа к защищенным полям
@@ -30,8 +29,12 @@ type
     class procedure ReadNodeData(VTree: TBaseVirtualTree; Node: PVirtualNode; Stream: TStream);
     class function GetNodeCount(VTree: TBaseVirtualTree): SizeInt;
   public
+    // --- ИЗМЕНЕНАЯ ПРОЦЕДУРА ---
     class procedure SaveTreeToStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream; RootNode: PVirtualNode = nil);
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+    // --- ИЗМЕНЕНАЯ ПРОЦЕДУРА ---
     class procedure LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream; ParentNode: PVirtualNode = nil);
+    // --- КОНЕЦ ИЗМЕНЕНИЯ ---
     class function AddNode(VTree: TBaseVirtualTree; ParentNode: PVirtualNode;
       const AActionName, ACaption, AtsName: String): PVirtualNode;
     class procedure PrepareForSave(VTree: TBaseVirtualTree); // вызвать перед SaveToStream
@@ -40,22 +43,18 @@ type
 
 implementation
 
-//! посмотреть 15 и 16 файлы
-
 { TVirtStringTreeHelper }
 
 class procedure TVirtStringTreeHelper.WriteNodeData(VTree: TBaseVirtualTree;
   Node: PVirtualNode; Stream: TStream);
 var
   Data: PMyRecord = nil;
-  Len: LongInt = 0;
+  Len: SizeInt = 0;
   EncodedActionName: UTF8String = '';
   EncodedCaption: UTF8String = '';
   EncodedtsName: UTF8String = '';
-
 begin
-  Data:= VTree.GetNodeData(Node);
-
+  Data := VTree.GetNodeData(Node);
   // Записываем данные в UTF-8 для обеспечения совместимости
   EncodedActionName := UTF8String(Data^.ActionName);
   EncodedCaption := UTF8String(Data^.Caption);
@@ -65,19 +64,16 @@ begin
   Stream.Write(Data^.ParentID, SizeOf(Data^.ParentID));
 
   // Записываем строки как UTF-8
-  Len:= Length(EncodedActionName);
+  Len := Length(EncodedActionName);
   Stream.Write(Len, SizeOf(Len));
-
   if (Len > 0) then Stream.Write(EncodedActionName[1], Len);
 
   Len := Length(EncodedCaption);
   Stream.Write(Len, SizeOf(Len));
-
   if (Len > 0) then Stream.Write(EncodedCaption[1], Len);
 
   Len := Length(EncodedtsName);
   Stream.Write(Len, SizeOf(Len));
-
   if (Len > 0) then Stream.Write(EncodedtsName[1], Len);
 end;
 
@@ -89,7 +85,7 @@ var
   TempUTF8: UTF8String = '';
   NextID: SizeInt = 0;
 begin
-  Data:= VTree.GetNodeData(Node);
+  Data := VTree.GetNodeData(Node);
 
   Stream.Read(Data^.ID, SizeOf(Data^.ID));
   Stream.Read(Data^.ParentID, SizeOf(Data^.ParentID));
@@ -97,33 +93,28 @@ begin
   // Читаем ActionName
   Stream.Read(Len, SizeOf(Len));
   SetLength(TempUTF8, Len);
-
   if (Len > 0) then Stream.Read(TempUTF8[1], Len);
   Data^.ActionName := String(TempUTF8);
 
   // Читаем Caption
   Stream.Read(Len, SizeOf(Len));
   SetLength(TempUTF8, Len);
-
   if (Len > 0) then Stream.Read(TempUTF8[1], Len);
   Data^.Caption := String(TempUTF8);
 
   // Читаем tsName
   Stream.Read(Len, SizeOf(Len));
   SetLength(TempUTF8, Len);
-
   if (Len > 0) then Stream.Read(TempUTF8[1], Len);
   Data^.tsName := String(TempUTF8);
 
-  // Обновляем NextID для корректной генерации новых ID
-  NextID := VTree.Tag; // используем Tag для хранения NextID
-
-  if (Data^.ID >= NextID) then NextID := Data^.ID + 1;
-  VTree.Tag := NextID;
+  // Обновляем Tag для отслеживания максимального ID при загрузке
+  NextID := VTree.Tag;
+  if Data^.ID >= NextID then
+    VTree.Tag := Data^.ID + 1; // Устанавливаем Tag на следующий возможный ID
 end;
 
-class function TVirtStringTreeHelper.GetNodeCount(VTree: TBaseVirtualTree
-  ): SizeInt;
+class function TVirtStringTreeHelper.GetNodeCount(VTree: TBaseVirtualTree): SizeInt;
 var
   Node: PVirtualNode = nil;
 begin
@@ -136,6 +127,9 @@ begin
   end;
 end;
 
+// --- ИЗМЕНЕНАЯ ПРОЦЕДУРА SaveTreeToStream ---
+// Сохраняет дерево, начиная с RootNode (или все корневые узлы, если RootNode = nil).
+// Сохраняет структуру: узел -> ChildCount -> дети узла и т.д.
 class procedure TVirtStringTreeHelper.SaveTreeToStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream; RootNode: PVirtualNode);
 var
   Node: PVirtualNode;
@@ -215,13 +209,13 @@ begin
     Inc(LoadedNodeCount); // Увеличиваем счетчик
 
     // --- ИЗМЕНЕНО: Используем TVirtualNode.ChildCount для подсчета детей ---
-    ChildCount := Node^.ChildCount;
+    ChildCount := Node.ChildCount;
 
     // Записываем количество детей
     AStream.Write(ChildCount, SizeOf(ChildCount));
 
     // --- ИЗМЕНЕНО: Используем прямой доступ к первому ребенку ---
-    ChildNode := Node^.FirstChild; // Используем прямой доступ к первому ребенку
+    ChildNode := Node.FirstChild; // Используем прямой доступ к первому ребенку
 
     // Рекурсивно сохраняем детей
     while Assigned(ChildNode) do
@@ -230,7 +224,7 @@ begin
       SaveTreeToStream(ATree, AStream, ChildNode); // Передаем ChildNode как RootNode для поддерева
       Inc(LoadedNodeCount); // Увеличиваем счетчик
       // Переходим к следующему ребенку
-      ChildNode := ChildNode^.NextSibling;
+      ChildNode := ChildNode.NextSibling;
     end;
 
     // --- ИЗМЕНЕНО: Переход к следующему узлу на том же уровне, если RootNode не задан ---
@@ -243,8 +237,10 @@ begin
 end;
 // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-class procedure TVirtStringTreeHelper.LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream; ParentNode: PVirtualNode
-  );
+// --- ИЗМЕНЕНАЯ ПРОЦЕДУРА LoadTreeFromStream ---
+// Загружает дерево из потока в ATree. Если ParentNode = nil, очищает ATree и загружает все корневые узлы.
+// Если ParentNode задан, загружает один узел и его детей как поддерево к ParentNode.
+class procedure TVirtStringTreeHelper.LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream; ParentNode: PVirtualNode);
 var
   NewNode: PVirtualNode;
   NodeData: PMyRecord;
@@ -326,10 +322,10 @@ begin
     end;
   end;
 end;
+// --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
 class function TVirtStringTreeHelper.AddNode(VTree: TBaseVirtualTree;
-  ParentNode: PVirtualNode; const AActionName, ACaption, AtsName: String
-  ): PVirtualNode;
+  ParentNode: PVirtualNode; const AActionName, ACaption, AtsName: String): PVirtualNode;
 var
   Data: PMyRecord = nil;
   ParentID: SizeInt = 0;
@@ -337,16 +333,14 @@ var
 begin
   Result := VTree.AddChild(ParentNode);
   Data := VTree.GetNodeData(Result);
-
   if not Assigned(ParentNode)
-     then ParentID := -1
-     else ParentID := PMyRecord(VTree.GetNodeData(ParentNode))^.ID;
+  then ParentID := -1
+  else ParentID := PMyRecord(VTree.GetNodeData(ParentNode))^.ID;
 
   NextID := VTree.Tag; // используем Tag для хранения NextID
   Data^.ID := NextID;
   Inc(NextID);
   VTree.Tag := NextID;
-
   Data^.ParentID := ParentID;
   Data^.ActionName := AActionName;
   Data^.Caption := ACaption;
@@ -364,6 +358,4 @@ begin
   TBaseVirtualTreeAccess(VTree).NodeDataSize := SizeOf(TMyRecord);
 end;
 
-
 end.
-
