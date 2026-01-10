@@ -28,10 +28,9 @@ type
   private
     class procedure WriteNodeData(aTree: TBaseVirtualTree; aNode: PVirtualNode; Stream: TStream);
     class procedure ReadNodeData(aTree: TBaseVirtualTree; aNode: PVirtualNode; Stream: TStream);
-    //class function GetNodeCount(aTree: TBaseVirtualTree): SizeInt;
   public
     class procedure SaveTreeToStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream);
-    class procedure LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream; ParentNode: PVirtualNode = nil);
+    class procedure LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream);
     class function AddNode(aTree: TBaseVirtualTree; aNode: PVirtualNode; const AActionName, ACaption, AtsName: String): PVirtualNode;
     class procedure InitializeTree(aTree: TBaseVirtualTree); // устанавливает NodeDataSize
   end;
@@ -43,58 +42,68 @@ implementation
 class procedure TVirtStringTreeHelper.WriteNodeData(aTree: TBaseVirtualTree; aNode: PVirtualNode; Stream: TStream);
 var
   Data: PMyRecord = nil;
-  Len: SizeInt = 0;
+  Len: Int64 = 0;
   EncodedActionName: UTF8String = '';
   EncodedCaption: UTF8String = '';
   EncodedtsName: UTF8String = '';
+  tmpStream: TMemoryStream = nil;//поток для сериализации этого узла
 begin
-  Data:= aTree.GetNodeData(aNode);
+  tmpStream:= TMemoryStream.Create;
 
-  // Записываем данные в UTF-8 для обеспечения совместимости
-  EncodedActionName := UTF8String(Data^.ActionName);
-  EncodedCaption := UTF8String(Data^.Caption);
-  EncodedtsName := UTF8String(Data^.tsName);
+  try
+    Data:= aTree.GetNodeData(aNode);
 
-  // Подсчитываем общую длину байтов данных этого конкретного узла (не всего дерева)
-  len:= SizeOf(Data^.ID)
-        + SizeOf(Data^.ParentID)
-        + SizeOf(Length(EncodedActionName))
-        + SizeOf(Length(EncodedCaption))
-        + SizeOf(Length(EncodedtsName));
+    // Записываем данные в UTF-8 для обеспечения совместимости
+    EncodedActionName := UTF8String(Data^.ActionName);
+    EncodedCaption := UTF8String(Data^.Caption);
+    EncodedtsName := UTF8String(Data^.tsName);
 
-  Stream.Write(len, SizeOf(len));// и пишем ее в поток
+    tmpStream.Clear;
 
-  // Записываем числовые значения ID и ParentID в поток.
-  Stream.Write(Data^.ID, SizeOf(Data^.ID));
-  Stream.Write(Data^.ParentID, SizeOf(Data^.ParentID));
+    // Сериализуем числовые значения ID и ParentID в поток.
+    tmpStream.Write(Data^.ID, SizeOf(int64));
+    tmpStream.Write(Data^.ParentID, SizeOf(Int64));
 
-  // Записываем строки как UTF-8
-  Len:= Length(EncodedActionName);
-  Stream.Write(Len, SizeOf(Len));
+    // Сериализуем строки как UTF-8
+    Len:= Length(EncodedActionName);
+    tmpStream.Write(Len, SizeOf(Len));
 
-  if (Len > 0) then Stream.Write(EncodedActionName[1], Len);
+    if (Len > 0) then tmpStream.Write(EncodedActionName[1], Len);
 
-  Len := Length(EncodedCaption);
-  Stream.Write(Len, SizeOf(Len));
+    Len := Length(EncodedCaption);
+    tmpStream.Write(Len, SizeOf(Len));
 
-  if (Len > 0) then Stream.Write(EncodedCaption[1], Len);
+    if (Len > 0) then tmpStream.Write(EncodedCaption[1], Len);
 
-  Len := Length(EncodedtsName);
-  Stream.Write(Len, SizeOf(Len));
+    Len := Length(EncodedtsName);
+    tmpStream.Write(Len, SizeOf(Len));
 
-  if (Len > 0) then Stream.Write(EncodedtsName[1], Len);
+    if (Len > 0) then tmpStream.Write(EncodedtsName[1], Len);
+
+
+    // Подсчитываем общую длину байтов данных в временном потоке и пишем её в основной поток
+    // в
+    //Stream.Write(TmpStream.Size, SizeOf(SizeInt)); // SizeInt - 4 байта(32-бит)/8 байт(64-бит)
+    Len:= TmpStream.Size;
+    Stream.Write(Len, SizeOf(Len)); // Int64 - 8 байт(32-бит)/8 байт(64-бит)
+
+    tmpStream.Seek(0,soBeginning);//сдвигаемся на начало данных
+    Stream.CopyFrom(tmpStream,tmpStream.Size);//пишем все сериализованные данные узла
+  finally
+    tmpStream.Free;
+  end;
 end;
 
 class procedure TVirtStringTreeHelper.ReadNodeData(aTree: TBaseVirtualTree; aNode: PVirtualNode; Stream: TStream);
 var
   Data: PMyRecord = nil;
-  Len: SizeInt = 0;
+  Len: Int64 = 0;
   TempUTF8: UTF8String = '';
 begin
   Data:= aTree.GetNodeData(aNode);
 
-  Stream.Read(Data^.ID, SizeOf(Data^.ID));
-  Stream.Read(Data^.ParentID, SizeOf(Data^.ParentID));
+  Stream.Read(Data^.ID, SizeOf(Int64));
+  Stream.Read(Data^.ParentID, SizeOf(Int64));
 
   // Читаем ActionName
   Stream.Read(Len, SizeOf(Len));
@@ -126,19 +135,6 @@ begin
     Data^.tsName := String(TempUTF8);
   end else Data^.tsName:= '';
 end;
-
-//class function TVirtStringTreeHelper.GetNodeCount(aTree: TBaseVirtualTree): SizeInt;
-//var
-//  Node: PVirtualNode = nil;
-//begin
-//  Result := 0;
-//  Node := aTree.GetFirst();
-//  while Assigned(Node) do
-//  begin
-//    Inc(Result);
-//    Node := aTree.GetNext(Node);
-//  end;
-//end;
 
 class procedure TVirtStringTreeHelper.SaveTreeToStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream);
 var
@@ -177,91 +173,70 @@ begin
     Node:= Node^.NextSibling;
   end;
 
-  //записываем в поток последовательно все данные узлов по порядку
-  for i := 0 to High(NodeArr) do WriteNodeData(ATree, NodeArr[i], AStream);
+  //сериализуем в поток данные узлов по порядку из расположения
+  for i := 0 to High(NodeArr) do
+  begin
+    AStream.Seek(0, soEnd);//сдвигаем позицию в конец потока
+    WriteNodeData(ATree, NodeArr[i], AStream);//сериализуем данные узла в него
+  end;
 end;
 
-class procedure TVirtStringTreeHelper.LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream; ParentNode: PVirtualNode);
-//var
-//  NewNode: PVirtualNode;
-//  NodeData: PMyRecord;
-//  ChildCount: Cardinal; // --- ИЗМЕНЕНО: Теперь используем Cardinal как тип ChildCount ---
-//  i: Integer; // --- ВВЕДЕНО: Для цикла загрузки детей ---
-//  CurrentParent: PVirtualNode; // --- ВВЕДЕНО: Для ясности ---
-//  TotalNodeCount: SizeInt; // --- ВВЕДЕНО: Для чтения общего количества узлов ---
-//  LoadedNodeCount: SizeInt; // --- ВВЕДЕНО: Для отслеживания загруженных узлов ---
+class procedure TVirtStringTreeHelper.LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream);
+var
+  Node: PVirtualNode = nil;
+  NodeArr: TNodeArray = nil;
+  Len: int64 = 0;
+  DestMS: TMemoryStream = nil;
+  Buff: array of Byte;
+  i: SizeInt = 0;
+  Data: PMyRecord = Nil;
 begin
-  //// --- ИЗМЕНЕНО: Проверка на пустой поток и чтение TotalNodeCount ---
-  //if AStream.Size = 0 then Exit; // Нечего загружать
-  //
-  //// Читаем общее количество узлов
-  //if AStream.Position + SizeOf(TotalNodeCount) > AStream.Size then Exit;
-  //AStream.Read(TotalNodeCount, SizeOf(TotalNodeCount));
-  //LoadedNodeCount := 0; // Сбрасываем счетчик
-  //
-  //// Если ParentNode = nil, очищаем дерево и начинаем загрузку с корня
-  //if not Assigned(ParentNode) then
-  //begin
-  //  ATree.Clear; // Очищаем дерево перед загрузкой
-  //  ATree.Tag := 1; // Сбрасываем ID для новой загрузки, если используется такая логика в других частях
-  //
-  //  // Цикл для загрузки TotalNodeCount узлов
-  //  // Этот цикл должен обрабатывать как корневые узлы, так и их поддеревья
-  //  // Логика: читаем узел, ChildCount, затем рекурсивно загружаем ChildCount детей
-  //  // Проблема: как отличить корневой узел от дочернего при чтении?
-  //  // Решение: SaveTreeToStream записывает узел, затем ChildCount, затем детей этого узла.
-  //  // LoadTreeFromStream (рекурсивно) читает узел, ChildCount, создает детей, вызывая себя для каждого ребенка.
-  //  // При вызове с ParentNode = nil, мы должны читать корневые узлы, пока не загрузим TotalNodeCount.
-  //  // Для этого основной цикл должен вызывать LoadTreeFromStream с ParentNode = nil,
-  //  // но LoadTreeFromStream должен отличать вызов для корневого узла от вызова для дочернего.
-  //  // В текущей реализации, если ParentNode = nil, он создает корневой узел AddChild(nil).
-  //  // Если ParentNode <> nil, он создает дочерний AddChild(ParentNode).
-  //  // Это работает, если мы вызываем LoadTreeFromStream для каждого корневого узла отдельно.
-  //  // Но нам нужно вызвать его один раз, и он должен сам обработать все корневые узлы.
-  //  // Значит, основной цикл здесь должен читать корневые узлы и вызывать LoadTreeFromStream для их детей.
-  //  // А сам LoadTreeFromStream (когда ему передают ParentNode) будет читать только один узел и его детей.
-  //
-  //  // Цикл для загрузки всех корневых узлов и их поддеревьев
-  //  while (AStream.Position < AStream.Size) and (LoadedNodeCount < TotalNodeCount) do
-  //  begin
-  //      // Создаем корневой узел (Parent = nil)
-  //      NewNode := ATree.AddChild(nil);
-  //      ReadNodeData(ATree, NewNode, AStream);
-  //      Inc(LoadedNodeCount);
-  //
-  //      // Читаем количество детей для этого корневого узла
-  //      if AStream.Position + SizeOf(ChildCount) > AStream.Size then Exit; // Недостаточно данных для ChildCount
-  //      AStream.Read(ChildCount, SizeOf(ChildCount));
-  //
-  //      // Цикл для загрузки ChildCount детей
-  //      for i := 0 to pred(Integer(ChildCount)) do // Приводим Cardinal к Integer для цикла
-  //      begin
-  //          // Рекурсивный вызов для загрузки поддерева, передаем только что созданный NewNode как Parent
-  //          LoadTreeFromStream(ATree, AStream, NewNode); // Передаем NewNode как Parent для его детей
-  //          Inc(LoadedNodeCount);
-  //      end;
-  //  end;
-  //end
-  //else // Если ParentNode задан, загружаем один узел как ребенка ParentNode
-  //begin
-  //  // Создаем новый узел как дочерний для ParentNode
-  //  NewNode := ATree.AddChild(ParentNode);
-  //  // Читаем данные для этого узла
-  //  ReadNodeData(ATree, NewNode, AStream);
-  //  Inc(LoadedNodeCount);
-  //
-  //  // Читаем количество детей для только что созданного узла
-  //  if AStream.Position + SizeOf(ChildCount) > AStream.Size then Exit; // Недостаточно данных для ChildCount
-  //  AStream.Read(ChildCount, SizeOf(ChildCount));
-  //
-  //  // Цикл для загрузки ChildCount детей
-  //  for i := 0 to pred(Integer(ChildCount)) do // Приводим Cardinal к Integer для цикла
-  //  begin
-  //      // Рекурсивный вызов для загрузки поддерева, передаем NewNode как Parent
-  //      LoadTreeFromStream(ATree, AStream, NewNode); // NewNode становится Parent для следующего уровня
-  //      Inc(LoadedNodeCount);
-  //  end;
-  //end;
+  if (AStream.Size = 0) then Exit;
+
+  DestMS:= TMemoryStream.Create;
+  try
+    //ATree.BeginUpdate;
+    try
+      ATree.Clear;
+      AStream.Position:= 0;
+
+      while (AStream.Position < AStream.Size) do //пока не достигли конца AStream
+      begin
+        Node:= ATree.AddChild(nil);//создаем узел
+
+        SetLength(NodeArr, Length(NodeArr) + 1);//увеличиваем размер массива узлов
+        NodeArr[High(NodeArr)]:= Node;// Добавляем текущий узел в массив
+
+        AStream.Read(Len,SizeOf(Int64));//читаем, сколько байт прочитать для очередного узла
+        SetLength(Buff,Len);
+        AStream.Read(Buff,Len);
+        //AStream.CopyFrom(DestMS,Len);//читаем все байты во временный поток
+        DestMS.Clear;
+        DestMS.Write(Buff,Length(Buff));
+        DestMS.Seek(0,soBeginning);
+        ReadNodeData(ATree,Node,DestMS);//десериализуем данные
+
+        Data:= nil;
+        Data:= ATree.GetNodeData(Node);
+        //ATree.Clear;
+      end;
+
+
+      if (Length(NodeArr) > 0) then
+      begin
+        for i := 0 to High(NodeArr) do
+        begin
+
+        end;
+      end;
+
+    finally
+      //ATree.EndUpdate;
+    end;
+  finally
+    DestMS.Free;
+  end;
+
 end;
 
 class function TVirtStringTreeHelper.AddNode(aTree: TBaseVirtualTree;
