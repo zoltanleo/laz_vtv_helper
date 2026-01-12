@@ -18,6 +18,8 @@ type
     tsName: String;       // имя вкладки PageControl
   end;
 
+  TRecArr = array of TMyRecord;
+
   // Вспомогательный класс для доступа к защищенным полям
   TBaseVirtualTreeAccess = class(TBaseVirtualTree)
   end;
@@ -34,6 +36,7 @@ type
     class function AddNode(aTree: TBaseVirtualTree; aNode: PVirtualNode; const AActionName, ACaption, AtsName: String): PVirtualNode;
     class procedure InitializeTree(aTree: TBaseVirtualTree); // устанавливает NodeDataSize
   end;
+
 
 implementation
 
@@ -183,13 +186,13 @@ end;
 
 class procedure TVirtStringTreeHelper.LoadTreeFromStream(ATree: TLazVirtualStringTree; AStream: TMemoryStream);
 var
-  Node: PVirtualNode = nil;
-  NodeArr: TNodeArray = nil;
-  Len: int64 = 0;
   DestMS: TMemoryStream = nil;
   Buff: array of Byte;
-  i: SizeInt = 0;
+  Node: PVirtualNode = nil;
+  Len: int64 = 0;
   Data: PMyRecord = Nil;
+  RecArrSrc: TRecArr;
+  RecArrUnit: TMyRecord;
 begin
   if (AStream.Size = 0) then Exit;
 
@@ -199,37 +202,41 @@ begin
     try
       ATree.Clear;
       AStream.Position:= 0;
+      SetLength(RecArrSrc,0);
 
       while (AStream.Position < AStream.Size) do //пока не достигли конца AStream
       begin
+        //ATree.Clear;
         Node:= ATree.AddChild(nil);//создаем узел
 
-        SetLength(NodeArr, Length(NodeArr) + 1);//увеличиваем размер массива узлов
-        NodeArr[High(NodeArr)]:= Node;// Добавляем текущий узел в массив
-
         AStream.Read(Len,SizeOf(Int64));//читаем, сколько байт прочитать для очередного узла
-        SetLength(Buff,Len);
-        AStream.Read(Buff,Len);
-        //AStream.CopyFrom(DestMS,Len);//читаем все байты во временный поток
+        SetLength(Buff,Len);//задаем размер буфера
+        AStream.Read(Buff,Len);//заполняем буфер
+
         DestMS.Clear;
-        DestMS.Write(Buff,Length(Buff));
+        DestMS.Write(Buff,Length(Buff));//пишем во временный поток
         DestMS.Seek(0,soBeginning);
         ReadNodeData(ATree,Node,DestMS);//десериализуем данные
 
         Data:= nil;
         Data:= ATree.GetNodeData(Node);
-        //ATree.Clear;
-      end;
 
-
-      if (Length(NodeArr) > 0) then
-      begin
-        for i := 0 to High(NodeArr) do
+        with RecArrUnit do
         begin
-
+          ID:= Data^.ID;
+          ParentID:=  Data^.ParentID;
+          ActionName:= Data^.ActionName;
+          Caption:= Data^.Caption;
+          tsName:= Data^.tsName;
         end;
+
+        SetLength(RecArrSrc,Length(RecArrSrc) + 1);//увеличиваем размер массива
+        RecArrSrc[High(RecArrSrc)]:= RecArrUnit;// добавляем текущую запись в массив
+
+        Data:= nil;
       end;
 
+      { #todo : далее надо очистить дерево, реализовать добавление узлов с учетом иерархии }
     finally
       //ATree.EndUpdate;
     end;
