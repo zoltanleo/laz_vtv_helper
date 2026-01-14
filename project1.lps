@@ -12,7 +12,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="92"/>
+        <UsageCount Value="93"/>
       </Unit>
       <Unit>
         <Filename Value="u_main.pas"/>
@@ -23,7 +23,7 @@
         <TopLine Value="42"/>
         <CursorPos Y="93"/>
         <FoldState Value=" T3iM0P111 PiJi400"/>
-        <UsageCount Value="92"/>
+        <UsageCount Value="93"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -36,7 +36,7 @@
         <EditorIndex Value="1"/>
         <TopLine Value="136"/>
         <CursorPos X="26" Y="161"/>
-        <UsageCount Value="92"/>
+        <UsageCount Value="93"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -45,10 +45,10 @@
         <IsPartOfProject Value="True"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="302"/>
-        <CursorPos X="9" Y="302"/>
+        <TopLine Value="257"/>
+        <CursorPos X="32" Y="277"/>
         <FoldState Value=" T3lQ2J1 PQN2X"/>
-        <UsageCount Value="74"/>
+        <UsageCount Value="75"/>
         <Bookmarks Count="1">
           <Item0 Y="166" Left="1" Top="99" ID="1"/>
         </Bookmarks>
@@ -111,7 +111,7 @@
     <Debugger>
       <Backend Value="{C6157405-0718-4C9C-A377-E08FA9D2F9DB}"/>
     </Debugger>
-    <JumpHistory HistoryIndex="28">
+    <JumpHistory HistoryIndex="29">
       <Position>
         <Filename Value="unit_virtstringtree.pas"/>
         <Caret Line="22" Column="53" TopLine="7"/>
@@ -227,6 +227,10 @@
       <Position>
         <Filename Value="unit_virtstringtree.pas"/>
         <Caret Line="36" Column="25" TopLine="12"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="302" Column="9" TopLine="302"/>
       </Position>
     </JumpHistory>
     <RunParams>

@@ -274,7 +274,7 @@ begin
         {обходной путь вместо AStream.CopyFrom
          DestMS.Write(Buff,Length(Buff));//пишем во временный поток
         }
-        AStream.CopyFrom(DestMS,Len);
+        DestMS.CopyFrom(AStream, Len);
 
         DestMS.Seek(0,soBeginning);
         ReadNodeData(ATree,Node,DestMS);//десериализуем данные
