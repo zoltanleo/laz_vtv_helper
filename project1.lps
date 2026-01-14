@@ -12,7 +12,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="92"/>
       </Unit>
       <Unit>
         <Filename Value="u_main.pas"/>
@@ -20,10 +20,10 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <TopLine Value="45"/>
-        <CursorPos X="16" Y="55"/>
-        <FoldState Value=" T3iM0P111 PiJi50*"/>
-        <UsageCount Value="91"/>
+        <TopLine Value="42"/>
+        <CursorPos Y="93"/>
+        <FoldState Value=" T3iM0P111 PiJi400"/>
+        <UsageCount Value="92"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -36,7 +36,7 @@
         <EditorIndex Value="1"/>
         <TopLine Value="136"/>
         <CursorPos X="26" Y="161"/>
-        <UsageCount Value="91"/>
+        <UsageCount Value="92"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit>
@@ -45,12 +45,12 @@
         <IsPartOfProject Value="True"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="229"/>
-        <CursorPos X="93" Y="239"/>
-        <FoldState Value=" T3i16r221 PjFlW60"/>
-        <UsageCount Value="73"/>
+        <TopLine Value="302"/>
+        <CursorPos X="9" Y="302"/>
+        <FoldState Value=" T3lQ2J1 PQN2X"/>
+        <UsageCount Value="74"/>
         <Bookmarks Count="1">
-          <Item0 Y="167" Left="1" Top="100" ID="1"/>
+          <Item0 Y="166" Left="1" Top="99" ID="1"/>
         </Bookmarks>
         <Loaded Value="True"/>
       </Unit>
@@ -71,11 +71,10 @@
       <Unit>
         <Filename Value="C:\lazarus\laz_test\lazarus\components\virtualtreeview\laz.virtualtrees.pas"/>
         <UnitName Value="laz.VirtualTrees"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="623"/>
         <CursorPos X="3" Y="637"/>
         <UsageCount Value="36"/>
-        <Loaded Value="True"/>
       </Unit>
       <Unit>
         <Filename Value="C:\lazarus\laz_test\lazarus\lcl\actnlist.pas"/>
@@ -101,63 +100,18 @@
         <CursorPos Y="28"/>
         <UsageCount Value="14"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\laz_vtv_serialize\unit_virtstringtree.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="49"/>
+        <CursorPos X="36" Y="56"/>
+        <UsageCount Value="10"/>
+      </Unit>
     </Units>
     <Debugger>
       <Backend Value="{C6157405-0718-4C9C-A377-E08FA9D2F9DB}"/>
     </Debugger>
-    <JumpHistory HistoryIndex="29">
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="184" Column="57" TopLine="134"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="357" TopLine="329"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="203" TopLine="203"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="208" Column="21" TopLine="188"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="199" Column="48" TopLine="189"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="198" Column="15" TopLine="186"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="208" Column="23" TopLine="201"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="226" Column="23" TopLine="207"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="220" Column="21" TopLine="206"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="221" Column="17" TopLine="200"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="220" TopLine="200"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="188" Column="58" TopLine="126"/>
-      </Position>
-      <Position>
-        <Filename Value="unit_virtstringtree.pas"/>
-        <Caret Line="14" Column="46"/>
-      </Position>
+    <JumpHistory HistoryIndex="28">
       <Position>
         <Filename Value="unit_virtstringtree.pas"/>
         <Caret Line="22" Column="53" TopLine="7"/>
@@ -226,6 +180,54 @@
         <Filename Value="unit_virtstringtree.pas"/>
         <Caret Line="234" Column="18" TopLine="219"/>
       </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="34" TopLine="13"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="237" Column="5" TopLine="237"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="225" Column="16" TopLine="211"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="229" Column="37" TopLine="213"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="289" Column="73" TopLine="267"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="286" Column="56" TopLine="264"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="283" TopLine="264"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="286" TopLine="270"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="288" TopLine="270"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="289" TopLine="270"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="228" TopLine="224"/>
+      </Position>
+      <Position>
+        <Filename Value="unit_virtstringtree.pas"/>
+        <Caret Line="36" Column="25" TopLine="12"/>
+      </Position>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
@@ -249,6 +251,9 @@
       <Item>
         <Expression Value="RecArrSrc"/>
         <DisplayFormat ArrayNavBarInherit="False"/>
+      </Item>
+      <Item>
+        <Expression Value="RecArrDest"/>
       </Item>
     </Watches>
   </Debugging>

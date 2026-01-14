@@ -192,13 +192,66 @@ var
   Len: int64 = 0;
   Data: PMyRecord = Nil;
   RecArrSrc: TRecArr;
-  RecArrUnit: TMyRecord;
+  RecArrDest: TRecArr;
+
+  //возвращает кол-во элементов с ParentID = ChildID во входном массиве InRecArr,
+  //при их наличии заполняет ими выходной массив OutRecArr
+  function GetChildRecords(ChildID: SizeInt; InRecArr: TRecArr; out OutRecArr: TRecArr):SizeInt;
+  var
+    idx: SizeInt  = 0;
+  begin
+    Result:= 0;
+
+    for idx := 0 to High(InRecArr) do
+      if (InRecArr[idx].ParentID = ChildID) then Inc(Result);
+
+    if (Result = 0) then Exit;
+
+    SetLength(OutRecArr,0);//инициализируем выходной буфер-массив
+
+    for idx := 0 to High(InRecArr) do
+      if (InRecArr[idx].ParentID = ChildID) then
+      begin
+        SetLength(OutRecArr,Length(OutRecArr) + 1);
+        OutRecArr[High(OutRecArr)]:= InRecArr[idx];
+      end;
+  end;
+
+  //добавляет в дерево aTree узлы одного aParentID, если ParentNode определен,
+  //то узлы будут дочерними, иначе - корневыми
+  procedure AddNodeFromArray(aParentID: SizeInt; ParentNode: PVirtualNode = nil);
+  var
+    _Node: PVirtualNode = nil;
+    _Data: PMyRecord = nil;
+    _RecArr: TRecArr;
+    j: SizeInt = 0;
+  begin
+    if (GetChildRecords(aParentID, RecArrSrc,_RecArr) = 0) then Exit;
+
+    for j := 0 to High(_RecArr) do
+    begin
+      _Node:= aTree.AddChild(ParentNode);
+      _Data:= aTree.GetNodeData(_Node);
+      _Data^:= _RecArr[j];
+    end;
+
+    if Assigned(ParentNode)
+      then _Node:= ParentNode^.FirstChild
+      else _Node:= aTree.GetFirst;
+
+    while Assigned(_Node) do
+    begin
+      _Data:= aTree.GetNodeData(_Node);
+      AddNodeFromArray(_Data^.ID, _Node);//добавляем вложенные узлы
+      _Node:= _Node^.NextSibling;
+    end;
+  end;
 begin
   if (AStream.Size = 0) then Exit;
 
   DestMS:= TMemoryStream.Create;
   try
-    //ATree.BeginUpdate;
+    ATree.BeginUpdate;
     try
       ATree.Clear;
       AStream.Position:= 0;
@@ -206,39 +259,44 @@ begin
 
       while (AStream.Position < AStream.Size) do //пока не достигли конца AStream
       begin
-        //ATree.Clear;
+        ATree.Clear;
         Node:= ATree.AddChild(nil);//создаем узел
 
         AStream.Read(Len,SizeOf(Int64));//читаем, сколько байт прочитать для очередного узла
-        SetLength(Buff,Len);//задаем размер буфера
-        AStream.Read(Buff,Len);//заполняем буфер
+
+        {обходной путь вместо AStream.CopyFrom
+         SetLength(Buff,Len);//задаем размер буфера
+         AStream.Read(Buff,Len);//заполняем буфер
+        }
 
         DestMS.Clear;
-        DestMS.Write(Buff,Length(Buff));//пишем во временный поток
+
+        {обходной путь вместо AStream.CopyFrom
+         DestMS.Write(Buff,Length(Buff));//пишем во временный поток
+        }
+        AStream.CopyFrom(DestMS,Len);
+
         DestMS.Seek(0,soBeginning);
         ReadNodeData(ATree,Node,DestMS);//десериализуем данные
 
-        Data:= nil;
+        //получаем десериализованные данные узла
         Data:= ATree.GetNodeData(Node);
 
-        with RecArrUnit do
-        begin
-          ID:= Data^.ID;
-          ParentID:=  Data^.ParentID;
-          ActionName:= Data^.ActionName;
-          Caption:= Data^.Caption;
-          tsName:= Data^.tsName;
-        end;
-
         SetLength(RecArrSrc,Length(RecArrSrc) + 1);//увеличиваем размер массива
-        RecArrSrc[High(RecArrSrc)]:= RecArrUnit;// добавляем текущую запись в массив
-
-        Data:= nil;
+        RecArrSrc[High(RecArrSrc)]:= Data^;// добавляем текущую запись в массив
       end;
 
-      { #todo : далее надо очистить дерево, реализовать добавление узлов с учетом иерархии }
+      //получаем ParentID первого root-узла
+      Node:= ATree.GetFirst;
+      Data:= ATree.GetNodeData(Node);
+
+      //перестраиваем дерево
+      if (GetChildRecords(Data^.ParentID,RecArrSrc,RecArrDest) = 0) then Exit;
+
+      ATree.Clear;
+      AddNodeFromArray(Data^.ParentID);//заполняем дерева
     finally
-      //ATree.EndUpdate;
+      ATree.EndUpdate;
     end;
   finally
     DestMS.Free;
@@ -253,11 +311,14 @@ var
   ParentID: SizeInt = 0;
 begin
   Result := aTree.AddChild(aNode);
-  Data := aTree.GetNodeData(Result);
 
-  if not Assigned(aNode)
-     then ParentID := -1
-     else ParentID := PMyRecord(aTree.GetNodeData(Result))^.ID;
+  if Assigned(aNode) then
+  begin
+    Data:= aTree.GetNodeData(aNode);
+    ParentID := Data^.ID;
+  end else ParentID := -1;
+
+  Data:= aTree.GetNodeData(Result);
 
   Data^.ID := aTree.AbsoluteIndex(Result);
   Data^.ParentID := ParentID;

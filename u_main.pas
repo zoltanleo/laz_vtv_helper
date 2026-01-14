@@ -107,7 +107,6 @@ end;
 procedure TfrmMain.LoadTreeFromChild;
 begin
   FchildFrm.tmpMS.Position := 0;
-  vstMain.Clear;
   TVirtStringTreeHelper.LoadTreeFromStream(vstMain, FchildFrm.tmpMS);
 end;
 
